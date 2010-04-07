@@ -51,7 +51,7 @@ available from the sh-clojure page on Deep Blue Lambda.][blog-page]  [The
 source for sh-clojure is available from GitHub][github].
 
   [blog-page]: http://www.deepbluelambda.org/programs/sh-clojure
-  [github]: http://sattvik.github.com/sh-clojure
+  [github]: http://github.com/sattvik/sh-clojure
 
 License
 -------
