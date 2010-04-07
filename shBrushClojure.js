@@ -15,19 +15,42 @@
 // along with this script.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Written by Daniel Solano Gómez
+//
+// Version 0.9 - 7 Apr 2010
+
+function ClojureRegExp(pattern) {
+	pattern = pattern + '(?=[[\\]{}(),\\s])';
+	this.regex=new RegExp(pattern,'g');
+	this.lookBehind=/[[\]{}(),\s]$/;
+}
+
+ClojureRegExp.prototype.exec=function(str) {
+	var match, leftContext;
+	while(match=this.regex.exec(str)) {
+		leftContext=str.substring(0,match.index);
+		if(this.lookBehind.test(leftContext)) {
+			return match;
+		}
+		else {
+			this.regex.lastIndex=match.index+1;
+		}
+	}
+	return null;
+};
 
 SyntaxHighlighter.brushes.Clojure = function() {
 	var special_forms =
 			'. def do fn if let loop monitor-enter monitor-exit new quote recur set! '+
 			'throw try var';
 
-	var clojure_core = 
+	var clojure_core =
 			'* *1 *2 *3 *agent* *allow-unresolved-vars* *assert* *clojure-version* ' +
 			'*command-line-args* *compile-files* *compile-path* *e *err* *file* ' +
 			'*flush-on-newline* *in* *macro-meta* *math-context* *ns* *out* ' +
 			'*print-dup* *print-length* *print-level* *print-meta* *print-readably* ' +
 			'*read-eval* *source-path* *use-context-classloader* ' +
-			'*warn-on-reflection* + - -> ->> .. / < <= = == > >= accessor aclone ' +
+			'*warn-on-reflection* + - -> -&gt; ->> -&gt;&gt; .. / < &lt; <= &lt;= = ' +
+			'== > &gt; >= &gt;= accessor aclone ' +
 			'add-classpath add-watch agent agent-errors aget alength alias all-ns ' +
 			'alter alter-meta! alter-var-root amap ancestors and apply areduce ' +
 			'array-map aset aset-boolean aset-byte aset-char aset-double aset-float ' +
@@ -95,94 +118,73 @@ SyntaxHighlighter.brushes.Clojure = function() {
 		keywordStr = keywordStr.replace(/[-[\]{}()*+?.\\^$|,#]/g, "\\$&");
 		// trim whitespace and convert to alternatives
 		keywordStr = keywordStr.replace(/^\s+|\s+$/g,'').replace(/\s+/g,'|');
-		// create pattern 
+		// create pattern
 		return '(?:' + keywordStr + ')';
 	}
 
-	function ClojureRegExp(pattern,flags) {
-		flags = flags || 'g';
-		pattern = pattern + '(?=[[\\]{}(),\\s])';
-		RegExp.call(this,pattern,flags);
-		// initialise extra properties
-		this.x = {
-			gRegex: new RegExp(pattern,flags),
-			startLb: {
-				regex: /[[\]{}(),\s]$/,
-				type: true
-			}
-		};
-		this.exec=function(str) {
-			// This code is based on the ideas presented by Steven Levithan at
-			// http://blog.stevenlevithan.com/archives/mimic-lookbehind-javascript
-			function lookBehind(data,regex,match) {
-				return (
-					(regex.x.startLb ? (regex.x.startLb.regex.test(data.substring(0, match.index)) === regex.x.startLb.type) : true)
-					&& (regex.x.endLb ? (regex.x.endLb.regex.test(data.substring(0, regex.x.gRegex.lastIndex)) === regex.x.endLb.type) : true)
-				);
-			}
-
-			var match=this.x.gRegex.exec(str);
-			if(match) {
-				if(lookBehind(str,this,match)) {
-					if(!this.global) {
-						this.lastIndex=this.x.gRegex.lastIndex;
-					}
-				}
-				else {
-					this.x.gRegex.lastIndex=match.index+1;
-					match=null;
-				}
-				this.lastIndex=this.x.gRegex.lastIndex;
-			}
-			return match;
-		}
-	}
-	ClojureRegExp.prototype=new RegExp;
-
-
 	this.regexList = [
 		// comments
-		{ regex: new RegExp(';.*$', 'gm'),                                css: 'comments' },
+		{ regex: new RegExp(';.*$', 'gm'),
+			css: 'comments' },
 		// strings
-		{ regex: SyntaxHighlighter.regexLib.multiLineDoubleQuotedString,  css: 'string' },
+		{ regex: SyntaxHighlighter.regexLib.multiLineDoubleQuotedString,
+			css: 'string' },
 		// regular expressions
-		{ regex: /#"(?:\.|(\\\")|[^\""\n])*"/g,                           css: 'value' },
+		{ regex: /#"(?:\.|(\\\")|[^\""\n])*"/g,
+			css: 'string' },
 		// vectors
-		{ regex: /\[|\]/g,                                                css: 'keyword' },
+		{ regex: /\[|\]/g,
+			css: 'keyword' },
 		// amperstands
-		{ regex: /\&/g,                                                   css: 'keyword' },
+		{ regex: /&(amp;)?/g,
+			css: 'keyword' },
 		// sets and maps
-		{ regex: /#?{|}/g,                                                css: 'keyword' },
-		// fn syntactic sugar
-		{ regex: /#\(|%/g,                                                css: 'keyword' },
+		{ regex: /#?{|}/g,
+			css: 'keyword' },
+		// anonymous fn syntactic sugar
+		{ regex: /#\(|%/g,
+			css: 'keyword' },
 		// (un)quoted sexprs
-		{ regex: /(['`]|~@?)[[({]/g,                                      css: 'keyword' },
+		{ regex: /(['`]|~@?)[[({]/g,
+			css: 'keyword' },
 		// lists
-		{ regex: /\(|\)/g,                                                css: 'keyword' },
+		{ regex: /\(|\)/g,
+			css: 'keyword' },
 		// character literals
-		{ regex: /\\.\b/g,                                                css: 'value' },
+		{ regex: /\\.\b/g,
+			css: 'value' },
 		// hexadecimal literals
-		{ regex: /[+-]?\b0x[0-9A-F]+\b/gi,                                css: 'value' },
+		{ regex: /[+-]?\b0x[0-9A-F]+\b/gi,
+			css: 'value' },
 		// integer/octal/float/bigdecimal literals
-		{ regex: /[+-]?\b\d+(\.\d*)?([eE][+-]?\d+|M)?\b/g,                css: 'value' },
+		{ regex: new ClojureRegExp("[+-]?\\b\\d+(\\.\\d*)?([eE][+-]?\\d+|M)?\\b"),
+			css: 'value' },
+		{ regex: /^[+-]?\b\d+(\.\d*)?([eE][+-]?\d+|M)?\b/g,
+			css: 'value' },
 		// booleans+nil
-		{ regex: /\b(true|false|nil)\b/g,                                 css: 'value' },
+		{ regex: /\b(true|false|nil)\b/g,
+			css: 'value' },
 		// (un)quoted symbols
-		{ regex: /([`']|~@?)[\w-]+/g,                                     css: 'color1' },
+		{ regex: /(`|#?'|~@?)[\w-.\/]+/g,
+			css: 'color1' },
 		// keywords
-		{ regex: /:[A-Za-z0-9_-]+/g,                                      css: 'constants' },
+		{ regex: /:[A-Za-z0-9_-]+/g,
+			css: 'constants' },
 		// special forms
-		{ regex: new ClojureRegExp(this.getKeywords(special_forms)),      css: 'preprocessor' },
+		{ regex: new ClojureRegExp(this.getKeywords(special_forms)),
+			css: 'preprocessor' },
 		// type hints
-		{ regex: /\#\^[A-Za-z]\w*/g,                                      css: 'preprocessor' },
+		{ regex: /\#\^[A-Za-z]\w*/g,
+			css: 'preprocessor' },
 		// clojure.core
-		{ regex: new ClojureRegExp(this.getKeywords(clojure_core)),       css: 'functions' }
+		{ regex: new ClojureRegExp(this.getKeywords(clojure_core)),
+			css: 'functions' }
 	];
 
 	this.forHtmlScript(SyntaxHighlighter.regexLib.scriptScriptTags);
 }
 
-SyntaxHighlighter.brushes.Clojure.prototype     = new SyntaxHighlighter.Highlighter(); 
-SyntaxHighlighter.brushes.Clojure.aliases       = ['clojure', 'Clojure', 'clj'];
+SyntaxHighlighter.brushes.Clojure.prototype = new SyntaxHighlighter.Highlighter();
+SyntaxHighlighter.brushes.Clojure.aliases   = ['clojure', 'Clojure', 'clj'];
 
 // vim: ts=2 sw=2 noet
