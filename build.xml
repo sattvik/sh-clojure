@@ -100,15 +100,15 @@ Written by Daniel Solano Gómez
   
   <target name='package.zip' depends='compile,dist.init'>
     <zip destfile='${target.zip}'>
-      <fileset refid='js.fileset'/>
-      <fileset refid='general.fileset'/>
+      <zipfileset prefix='${target.name}' refid='js.fileset'/>
+      <zipfileset prefix='${target.name}' refid='general.fileset'/>
     </zip>
   </target>
   
   <target name='package.tgz' depends='compile,dist.init'>
     <tar destfile='${target.tgz}' compression='gzip'>
-      <fileset refid='js.fileset'/>
-      <fileset refid='general.fileset'/>
+      <tarfileset prefix='${target.name}' refid='js.fileset'/>
+      <tarfileset prefix='${target.name}' refid='general.fileset'/>
     </tar>
   </target>
 
