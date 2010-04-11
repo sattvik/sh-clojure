@@ -1,49 +1,42 @@
-// Copyright © 2010 Sattvik Software & Technology Resources, Ltd. Co.
-// All rights reserved.
-//
-// This script is free software; you can redistribute it and/or modify it under
-// the terms of the GNU Lesser General Public License as published by the Free
-// Software Foundation; either version 3 of the License, or (at your option)
-// any later version.
-//
-// This script is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-// for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with this script.  If not, see <http://www.gnu.org/licenses/>.
-//
-// Written by Daniel Solano Gómez
-//
-// Version 0.9 - 7 Apr 2010
+/*!
+ * Copyright © 2010 Sattvik Software & Technology Resources, Ltd. Co.
+ * All rights reserved.
+ *
+ * sh-clojure may be used under the terms of either the GNU Lesser General Public
+ * License (LGPL) or the Eclipse Public License (EPL).  As a recipient of
+ * sh-clojure, you may choose which license to receive the code under.  See the
+ * LICENSE file distributed with sh-clojure for details.
+ *
+ * Written by Daniel Solano Gómez
+ *
+ * Version 0.9.1 - 10 Apr 2010
+ */
 
 function ClojureRegExp(pattern) {
 	pattern = pattern + '(?=[[\\]{}(),\\s])';
-	this.regex=new RegExp(pattern,'g');
-	this.lookBehind=/[[\]{}(),\s]$/;
+	this.regex = new RegExp(pattern, 'g');
+	this.lookBehind = /[\[\]{}(),\s]$/;
 }
 
-ClojureRegExp.prototype.exec=function(str) {
+ClojureRegExp.prototype.exec = function (str) {
 	var match, leftContext;
-	while(match=this.regex.exec(str)) {
-		leftContext=str.substring(0,match.index);
-		if(this.lookBehind.test(leftContext)) {
+	while (match=this.regex.exec(str)) {
+		leftContext = str.substring(0, match.index);
+		if (this.lookBehind.test(leftContext)) {
 			return match;
 		}
 		else {
-			this.regex.lastIndex=match.index+1;
+			this.regex.lastIndex = match.index + 1;
 		}
 	}
 	return null;
 };
 
-SyntaxHighlighter.brushes.Clojure = function() {
+SyntaxHighlighter.brushes.Clojure = function () {
 	var special_forms =
-			'. def do fn if let loop monitor-enter monitor-exit new quote recur set! '+
-			'throw try var';
-
-	var clojure_core =
+			'. def do fn if let loop monitor-enter monitor-exit new quote recur set! ' +
+			'throw try var',
+	    clojure_core =
 			'* *1 *2 *3 *agent* *allow-unresolved-vars* *assert* *clojure-version* ' +
 			'*command-line-args* *compile-files* *compile-path* *e *err* *file* ' +
 			'*flush-on-newline* *in* *macro-meta* *math-context* *ns* *out* ' +
@@ -113,14 +106,14 @@ SyntaxHighlighter.brushes.Clojure = function() {
 			'with-local-vars with-meta with-open with-out-str with-precision xml-seq ' +
 			'zero? zipmap ';
 
-	this.getKeywords = function(keywordStr) {
+	this.getKeywords = function (keywordStr) {
 		// quote special characters
-		keywordStr = keywordStr.replace(/[-[\]{}()*+?.\\^$|,#]/g, "\\$&");
+		keywordStr = keywordStr.replace(/[\-\[\]{}()*+?.\\\^$|,#]/g, "\\$&");
 		// trim whitespace and convert to alternatives
-		keywordStr = keywordStr.replace(/^\s+|\s+$/g,'').replace(/\s+/g,'|');
+		keywordStr = keywordStr.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '|');
 		// create pattern
 		return '(?:' + keywordStr + ')';
-	}
+	};
 
 	this.regexList = [
 		// comments
@@ -139,13 +132,16 @@ SyntaxHighlighter.brushes.Clojure = function() {
 		{ regex: /&(amp;)?/g,
 			css: 'keyword' },
 		// sets and maps
-		{ regex: /#?{|}/g,
+		{ regex: /#?\{|\}/g,
 			css: 'keyword' },
 		// anonymous fn syntactic sugar
 		{ regex: /#\(|%/g,
 			css: 'keyword' },
+		// deref reader macro
+		{ regex: /@/g,
+			css: 'keyword' },
 		// (un)quoted sexprs
-		{ regex: /(['`]|~@?)[[({]/g,
+		{ regex: /(['`]|~@?)[\[({]/g,
 			css: 'keyword' },
 		// lists
 		{ regex: /\(|\)/g,
@@ -154,12 +150,12 @@ SyntaxHighlighter.brushes.Clojure = function() {
 		{ regex: /\\.\b/g,
 			css: 'value' },
 		// hexadecimal literals
-		{ regex: /[+-]?\b0x[0-9A-F]+\b/gi,
+		{ regex: /[+\-]?\b0x[0-9A-F]+\b/gi,
 			css: 'value' },
 		// integer/octal/float/bigdecimal literals
 		{ regex: new ClojureRegExp("[+-]?\\b\\d+(\\.\\d*)?([eE][+-]?\\d+|M)?\\b"),
 			css: 'value' },
-		{ regex: /^[+-]?\b\d+(\.\d*)?([eE][+-]?\d+|M)?\b/g,
+		{ regex: /^[+\-]?\b\d+(\.\d*)?([eE][+\-]?\d+|M)?\b/g,
 			css: 'value' },
 		// booleans+nil
 		{ regex: /\b(true|false|nil)\b/g,
@@ -168,7 +164,7 @@ SyntaxHighlighter.brushes.Clojure = function() {
 		{ regex: /(`|#?'|~@?)[\w-.\/]+/g,
 			css: 'color1' },
 		// keywords
-		{ regex: /:[A-Za-z0-9_-]+/g,
+		{ regex: /:[A-Za-z0-9_\-]+/g,
 			css: 'constants' },
 		// special forms
 		{ regex: new ClojureRegExp(this.getKeywords(special_forms)),
@@ -182,7 +178,7 @@ SyntaxHighlighter.brushes.Clojure = function() {
 	];
 
 	this.forHtmlScript(SyntaxHighlighter.regexLib.scriptScriptTags);
-}
+};
 
 SyntaxHighlighter.brushes.Clojure.prototype = new SyntaxHighlighter.Highlighter();
 SyntaxHighlighter.brushes.Clojure.aliases   = ['clojure', 'Clojure', 'clj'];

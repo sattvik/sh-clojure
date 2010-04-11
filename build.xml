@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+Copyright © 2010 Sattvik Software & Technology Resources, Ltd. Co.
+All rights reserved.
+
+sh-clojure may be used under the terms of either the GNU Lesser General Public
+License (LGPL) or the Eclipse Public License (EPL).  As a recipient of
+sh-clojure, you may choose which license to receive the code under.  See the
+LICENSE file distributed with sh-clojure for details.
+
+Written by Daniel Solano Gómez
+-->
+
+<project name='sh-clojure' default='all'>
+  <description>
+    An imroved SyntaxHighlighter brush for Clojure.
+  </description>
+
+  <!-- load all properties from files and environment -->
+  <property environment='env'/>
+  <property file='build.properties'/>
+
+  <!-- project properties -->
+  <property name='project.name' value='${ant.project.name}'/>
+  <property name='project.version' value='SNAPSHOT'/>
+  <property name='project.name-ver' value='${project.name}-${project.version}'/>
+
+  <!-- source properties -->
+  <property name='src.dir' location='src'/>
+  <property name='src.brush.js' location='${src.dir}/shBrushClojure.js'/>
+
+  <!-- build properties -->
+  <property name='build.dir' location='build'/>
+  <property name='min.brush.js' location='${build.dir}/shBrushClojure.js'/>
+
+  <!-- distribution directory -->
+  <property name='dist.dir' location='dist'/>
+
+  <!-- distribution targets -->
+  <property name='target.name' value='${project.name-ver}'/>
+  <property name='target.zip' location='${dist.dir}/${target.name}.zip'/>
+  <property name='target.tgz' location='${dist.dir}/${target.name}.tar.gz'/>
+
+  <!-- library directories and jars -->
+  <property name='lib.dir' location='lib'/>
+  <property name='yuicompressor.jar' location='${lib.dir}/yuicompressor.jar'/>
+
+  <!-- filesets -->
+  <fileset dir='${build.dir}' id='js.fileset'>
+    <include name='**/*.js'/>
+  </fileset>
+
+  <fileset dir='.' id='general.fileset'>
+    <include name='LICENSE'/>
+    <include name='README.markdown'/>
+  </fileset>
+
+  <filelist id='checksum.filelist'>
+    <file name='${target.zip}'/>
+    <file name='${target.tgz}'/>
+  </filelist>
+
+  <!-- main targets -->
+  <target name='all' depends='dist'
+      description='Default target—an alias for dist'/>
+
+  <target name='dist' depends='package,checksum'
+      description='Creates distribution files.'/>
+
+  <target name='clean'
+      description='Clean generated files.'>
+    <delete dir='${build.dir}'/>
+  </target>
+
+  <target name='distclean' depends='clean'
+      description='Cleans all generated files including distribution files.'>
+    <delete dir='${dist.dir}'/>
+  </target>
+
+  <!-- helper targets -->
+  <target name='init'>
+    <tstamp/>
+  </target>
+
+  <target name='compile' depends='minify'/>
+
+  <target name='minify' depends='compile.init'>
+    <java jar='${yuicompressor.jar}' fork='true'>
+      <arg value='-o'/>
+      <arg value='${min.brush.js}'/>
+      <arg value='${src.brush.js}'/>
+    </java>
+  </target>
+
+  <target name='compile.init' depends='init'>
+    <mkdir dir='${build.dir}'/>
+  </target>
+
+  <target name='package' depends='package.zip,package.tgz'/>
+  
+  <target name='package.zip' depends='compile,dist.init'>
+    <zip destfile='${target.zip}'>
+      <fileset refid='js.fileset'/>
+      <fileset refid='general.fileset'/>
+    </zip>
+  </target>
+  
+  <target name='package.tgz' depends='compile,dist.init'>
+    <tar destfile='${target.tgz}' compression='gzip'>
+      <fileset refid='js.fileset'/>
+      <fileset refid='general.fileset'/>
+    </tar>
+  </target>
+
+  <target name='dist.init' depends='init'>
+    <mkdir dir='${dist.dir}'/>
+  </target>
+
+  <target name='checksum' depends='package'>
+    <checksum todir='${dist.dir}'
+	algorithm='SHA-512'
+	fileext='.sha512' format='MD5SUM'>
+      <filelist refid='checksum.filelist'/>
+    </checksum>
+  </target>
+</project>
