@@ -134,6 +134,9 @@ SyntaxHighlighter.brushes.Clojure = function () {
 		// sets and maps
 		{ regex: /#?\{|\}/g,
 			css: 'keyword' },
+		// metadata
+		{ regex: /#\^\{/g,
+			css: 'keyword' },
 		// anonymous fn syntactic sugar
 		{ regex: /#\(|%/g,
 			css: 'keyword' },
